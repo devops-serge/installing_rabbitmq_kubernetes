@@ -1,0 +1,41 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: rabbitmq-producer
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: rabbitmq-producer
+  template:
+    metadata:
+      labels:
+        app: rabbitmq-producer
+    spec:
+      initContainers:
+        - name: install-packages
+          image: python:3.9
+          command: ["sh", "-c" , "pip install --target=/python-packages pika"]
+          volumeMounts:
+            - name: python-packages
+              mountPath: /python-packages
+      containers:
+        - name: rabbitmq-script
+          image: python:3.9
+          command: ["python", "/app/rabbitmq_producer.py"]
+          env:
+            - name: PYTHONPATH
+              value: "/python-packages"  # Set PYTHONPATH to find installed packages
+          volumeMounts:
+            - name: python-packages
+              mountPath: /python-packages
+            - name: script-config
+              mountPath: /app/rabbitmq_producer.py
+              subPath: rabbitmq_producer.py
+      volumes:
+        - name: script-config
+          configMap:
+            name: rabbitmq-producer-script  # ConfigMap containing the Python script
+        - name: python-packages
+          emptyDir: {}
+

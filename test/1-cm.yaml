@@ -1,0 +1,40 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: rabbitmq-producer-script
+data:
+  rabbitmq_producer.py: |
+    import pika
+    import random
+    import string
+    from time import sleep
+
+    # Establish a connection with RabbitMQ server
+    credentials = pika.PlainCredentials('test', '123qweASD')
+    parameters = pika.ConnectionParameters('rabbitmq.rabbitmq.svc.cluster.local',
+                                           5672,
+                                           '/',
+                                           credentials)
+
+    connection = pika.BlockingConnection(parameters)
+
+    # Create a channel within the connection
+    channel = connection.channel()
+
+    # Define the arguments for the queue declaration
+    queue_args = {"x-max-length": 10, "x-message-ttl": 60000}
+
+    # Declare a queue where the message will be sent
+    channel.queue_declare(queue='my_queue', durable=True, arguments=queue_args)
+
+    while True:
+        random_string = ''.join(random.choices(string.ascii_lowercase, k=5))
+
+        # Publish the random string to the queue
+        channel.basic_publish(exchange='',
+                              routing_key='my_queue',
+                              body=str(random_string))
+        sleep(5)
+
+    # Close the connection
+    # connection.close()

@@ -1,0 +1,36 @@
+# https://github.com/rabbitmq/cluster-operator/tree/main/docs/examples/production-ready
+apiVersion: rabbitmq.com/v1beta1
+kind: RabbitmqCluster
+metadata:
+  name: rabbitmq
+  labels:
+    service: rabbitmq
+spec:
+  resources:
+    requests:
+      cpu: 300m
+      memory: "1000Mi"
+    limits:
+      memory: "1000Mi"
+  affinity:
+    podAntiAffinity:
+      preferredDuringSchedulingIgnoredDuringExecution:
+      - weight: 5
+        podAffinityTerm:
+          topologyKey: "kubernetes.io/hostname"
+          labelSelector:
+            matchLabels:
+              service: rabbitmq
+  tolerations:
+  - key: "node-role.kubernetes.io/control-plane"
+    effect: NoSchedule
+    operator: Exists
+  replicas: 3
+  service:
+    type: ClusterIP
+  persistence:
+    storageClassName: local-storage
+    storage: "1000Mi"
+  secretBackend:
+    externalSecret: 
+      name: "rabbitmq-secret"

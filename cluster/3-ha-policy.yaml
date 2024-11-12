@@ -1,0 +1,16 @@
+---
+apiVersion: rabbitmq.com/v1beta1
+kind: Policy
+metadata:
+  name: rabbitmq-ha-policy
+spec:
+  name: rabbitmq-ha-policy # name of the policy
+  vhost: "/" # default to '/' if not provided
+  pattern: ".*" # regex used to match queues and exchanges
+  applyTo: "all" # set to 'queues', 'exchanges', or 'all'
+  definition:
+    ha-mode: exactly
+    ha-params: 3
+    ha-sync-mode: automatic
+  rabbitmqClusterReference:
+    name: rabbitmq #name of the rabbitmqcluster
